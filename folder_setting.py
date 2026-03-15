@@ -1,8 +1,10 @@
 # ··························································
-# ············· QUERALT MARTÍN-SALADICH, 2026 ··············
+# ············ Applied Chest Imaging Lab, 2026 ·············
+# ·········· @acil-bwh | @queraltmartinsaladich ············
 # ··············· Brigham & Women's Hospital ···············
 # ················· Harvard Medical School ·················
 # ··························································
+
 import os
 import argparse
 

@@ -27,6 +27,7 @@ _REQUIRED MODULES:_
 
 `cd your_path`
 * git clone into `your_path` -> ```git clone https://github.com/acil-bwh/LFT-former.git```
+  - Pretrained models --> pretrained models, download into the folder .../`project_name`-checkpoints (see A)
   - Functions --> general code files
     > Utils <br>
       ...
@@ -39,17 +40,17 @@ _REQUIRED MODULES:_
 
 __OVERALL HIERARCHY BEFORE RUNNING LFT:__
 
-  - .../`project_name`-files --> store here your source csv files (see A)
   - .../`project_name`-imgs --> store here your imgs (see B)
+  - .../`project_name`-files --> store here your source csv files (see C)
+  - .../`project_name`-models --> store here the pretrained models (A)
   - .../`project_name`-checkpoints --> where checkpoints will be saved
-  - .../`project_name`-models --> where final models will be saved
   - .../`project_name`-embeddings --> where embeddings will be saved
   - .../`project_name`-results --> where your results will be saved
     > figures <br>
     > models <br>
     > metrics
 
-_IMAGE MANAGEMENT:_
+_B. IMAGE MANAGEMENT:_
 Store the 2D scans in npy or png for IDs=1...N, in our example slices=20. Make sure that whatever you store them e.g. `IDnum` `SLICEnum` is compatible with the file processing function, otherwise adapt it accordingly.
   > ID11.npy <br>
   ... <br>
@@ -61,7 +62,7 @@ Store the 2D scans in npy or png for IDs=1...N, in our example slices=20. Make s
 
 Specifications: set window range to L=-700, W=1500, orient/rotate to LAS (left-anterior-superior)
 
-_FILE MANAGEMENT:_
+_C. FILE MANAGEMENT:_
 In your original file, variables should be stored as: ["sid", "traj", "age", "gender", "packs", "emph", "race", "bmi"] and should be stored in `project_name`-files. Then, create the necessary subfiles using the provided function -> ```python LFT-former/file_processing.py```
 
 ## USAGE MANUAL
