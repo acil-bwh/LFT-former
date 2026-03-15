@@ -1,7 +1,7 @@
 # LFT-former
 ## Multi-slice transformer model to predict lung-function trajectories (LFTs) from CT images
 
-This repository allows for training and inference of multi-slice LFT to predict lung-function trajectories from CT scans. It allows the user to add clinical features including age, gender, race, smoking-packs-per-year, BMI and % emphysema. This code can be adapted for each project using project_name (e.g. COPDGene in this repo).
+This repository allows for training and inference of multi-slice LFT to predict lung-function trajectories from CT scans. It allows the user to add clinical features including age, gender, race, smoking-packs-per-year, BMI and % emphysema. This code can be adapted for each project using project_name.
 
 ### PYTHON DEPENDENCIES
 ```conda create -n venv python``` <br>
