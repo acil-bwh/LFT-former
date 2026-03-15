@@ -32,8 +32,8 @@ _REQUIRED MODULES:_
       ...
   - README.md --> how to use this repository
   - requirements.txt --> required libraries
-  - folder_setting.py --> generate folders where files, imgs are and where results will be stored
-  - file_processing.py --> generate files for training, validation and testing (requires main path, project name and total number of slices [in this example 9 for central and 20 for total, but can be toggled to your own project and CT subsampling])
+  - `folder_setting.py` --> generate folders where files, imgs are and where results will be stored
+  - `file_processing.py` --> generate files for training, validation and testing (requires main path, project name and total number of slices [in this example 9 for central and 20 for total, but can be toggled to your own project and CT subsampling])
 
 * generate folders -> ```python LFT-former/folder_setting.py``` 
 
@@ -50,7 +50,7 @@ __OVERALL HIERARCHY BEFORE RUNNING LFT:__
     > metrics
 
 _IMAGE MANAGEMENT:_
-Store the 2D scans in npy or png for IDs=1...N, in our example slices=20. Make sure that whatever you store them e.g. `IDnum``SLICEnum` is compatible with the file processing function, otherwise adapt it accordingly.
+Store the 2D scans in npy or png for IDs=1...N, in our example slices=20. Make sure that whatever you store them e.g. `IDnum` `SLICEnum` is compatible with the file processing function, otherwise adapt it accordingly.
   > ID11.npy <br>
   ... <br>
   > ID120.npy <br>
