@@ -182,7 +182,7 @@ def Trainer(main_path,
         # scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5)
         
         if load_pretrained == True and load_from_checkpoint == False:
-            checkpoint_path = os.path.join(main_checkpoint_path, f"best_RegionViT.pt")
+            checkpoint_path = os.path.join(main_checkpoint_path, f"best_RegionViT_traj.pt")
             checkpoint = torch.load(checkpoint_path, map_location="cpu")
             model.load_state_dict(checkpoint["model_state_dict"])
             model = model.to(device=device)
@@ -191,7 +191,7 @@ def Trainer(main_path,
             print(f"Loaded pretrained weights from {checkpoint_path}\n")
 
         elif load_from_checkpoint == True and load_pretrained == False:
-            checkpoint_path = os.path.join(main_checkpoint_path, f"best_RegionViT.pt")
+            checkpoint_path = os.path.join(main_checkpoint_path, f"best_RegionViT_traj.pt")
             checkpoint = torch.load(checkpoint_path, map_location=device)
             model.load_state_dict(checkpoint['model_state_dict'])
             model = model.to(device=device)
@@ -306,7 +306,7 @@ def Trainer(main_path,
                 best_epoch = epoch + 1
                 epochs_no_improve = 0
 
-                best_model_path = os.path.join(main_checkpoint_path, f"best_RegionViT.pt")
+                best_model_path = os.path.join(main_checkpoint_path, f"best_RegionViT_traj.pt")
                 torch.save({
                     "epoch": epoch,
                     "model_state_dict": model.state_dict(),
@@ -323,7 +323,7 @@ def Trainer(main_path,
                 print(f"Early stopping triggered at epoch {epoch+1}. Best epoch: {best_epoch} (val_acc: {best_val_acc:.4f})")
                 break
             
-        final_model_path = os.path.join(main_path, f"{project_name}-models/model_RegionViT.pt")
+        final_model_path = os.path.join(main_path, f"{project_name}-models/model_RegionViT_traj.pt")
         os.makedirs(os.path.dirname(final_model_path), exist_ok=True)
         torch.save({
             "model_state_dict": model.state_dict(),
