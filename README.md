@@ -49,8 +49,8 @@ __OVERALL HIERARCHY BEFORE RUNNING LFT:__
     > models <br>
     > metrics
 
-IMAGE MANAGEMENT:
-Store the 2D scans in npy or png for IDs=1...N, in our example slices=20
+_IMAGE MANAGEMENT:_
+Store the 2D scans in npy or png for IDs=1...N, in our example slices=20. Make sure that whatever you store them e.g. _1 is compatible with the file processing function, otherwise adapt it accordingly.
   > ID1_1.npy <br>
   ... <br>
   > ID1_20.npy <br>
@@ -59,7 +59,7 @@ Store the 2D scans in npy or png for IDs=1...N, in our example slices=20
   ... <br>
   > IDN_20.npy <br>
 
-FILE MANAGEMENT:
+_FILE MANAGEMENT:_
 In your original file, variables should be stored as: ["sid", "traj", "age", "gender", "packs", "emph", "race", "bmi"] and should be stored in {project_name}-files. Then, create the necessary subfiles using the provided function -> ```python LFT-former/file_processing.py```
 
 ## USAGE MANUAL
