@@ -39,6 +39,7 @@ _REQUIRED MODULES:_
   - .../{project_name}-files --> where files are saved
   - .../{project_name}-imgs --> where imgs in npy or png are saved
   - .../{project_name}-checkpoints --> where checkpoints will be saved
+  - .../{project_name}-embeddings --> where embeddings will be saved
   - .../{project_name}-results --> where your results will be saved
     > figures <br>
     > models <br>
@@ -46,9 +47,9 @@ _REQUIRED MODULES:_
 
 <br> 
 
-* a folder {project_name}{M}-features-{N} will be added when computing the embeddings using init_embeddings_RegionViT.py --> where augmented features of RegionViT are stored
+* a folder {project_name}-features will be added when computing the embeddings using init_embeddings_RegionViT.py --> where augmented features of RegionViT are stored
 
-## How to use this repo for training, inference, and visualization
+## USAGE MANUAL
 
 **BEFORE RUNNING:** <br>
 * activate your virtual environment where python and its libraries are -> ```conda activate venv```
@@ -71,11 +72,10 @@ _REQUIRED MODULES:_
     - decay (default:1e-5)
     - pretrained (default:False call if pretrained)
     - precheck (default:False call if loading from checkpoint)
-    - wrapp (default:"modular")
+    - wrapp (default:"gatt")
     - add (default:0)
     
 <br>
-
 ADD can be: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) --> Which metadata tensor of clinical features is fused with image-based embeddings:
  
 0.	Only CT imaging
@@ -97,7 +97,8 @@ ADD can be: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) --> Which metadata tensor of
 
 WRAP can be: ("gatt" "gate" "modular" "along" "concat" "dot" "cross" "multi") --> How clinical features are fused with image-based embeddings, default=gatt: gated feature attention [dynamic regulation of the relevance of image-derived features based on the clinical context. We define the query Q as a linear projection of the metadata and the keys K as a linear projection of the feature embeddings. We apply ]
 
-### RegionViT: Training
+## RegionViT
+### Training
 
 Running for RegionViT from scratch: 
 
