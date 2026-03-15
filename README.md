@@ -35,7 +35,7 @@ _REQUIRED MODULES:_
   - requirements.txt --> required libraries
   - folder_setting.py --> generate folders where files, imgs are and where results will be stored
 
-* generate folders -> ```nohup python COPDTransformers/folder_setting.py > folder_setting.log 2>&1 &```
+* generate folders -> ```python LFT-former/folder_setting.py > folder_setting.log 2>&1 &```
   - .../{project_name}-files --> where files are saved
   - .../{project_name}-imgs --> where imgs in npy or png are saved
   - .../{project_name}-checkpoints --> where checkpoints will be saved
