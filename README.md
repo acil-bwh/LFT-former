@@ -46,17 +46,15 @@ _REQUIRED MODULES:_
 
 <br> 
 
-* a folder {project_name}{M}-features-{N} will be added when computing the embeddings using init_embeddings_RegionViT.py
+* a folder {project_name}{M}-features-{N} will be added when computing the embeddings using init_embeddings_RegionViT.py --> where augmented features of RegionViT are stored
 
---> where augmented features of RegionViT are stored (M: model 2 for TRAJ, N:  slices 9 or 20)
+## How to use this repo for training, inference, and visualization
 
 **BEFORE RUNNING:** <br>
 * activate your virtual environment where python and its libraries are -> ```conda activate venv```
 
 **WHEN RUNNING ON HPC:** <br>
 * `nohup` commands: to run a command that keeps running even after you log out/close the terminal/disconnect SSH session <br>
-
-## How to use this repo for training, inference, and visualization
 
 ### ARGUMENTS:
   - required:
