@@ -75,7 +75,6 @@ _REQUIRED MODULES:_
     - wrapp (default:"gatt")
     - add (default:0)
     
-<br>
 ADD can be: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) --> Which metadata tensor of clinical features is fused with image-based embeddings:
  
 0.	Only CT imaging
@@ -97,11 +96,11 @@ ADD can be: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) --> Which metadata tensor of
 
 WRAP can be: ("gatt" "gate" "modular" "along" "concat" "dot" "cross" "multi") --> How clinical features are fused with image-based embeddings, default=gatt: gated feature attention [dynamic regulation of the relevance of image-derived features based on the clinical context. We define the query Q as a linear projection of the metadata and the keys K as a linear projection of the feature embeddings. We apply ]
 
-## RegionViT
-### Training
+## CALLING AND EXECUTING
+### RegionViT: Training
 
 Running for RegionViT from scratch: 
-
+ D
 ```python LFT-former/COPD-transformers/init_training_RegionViT.py --path /your/path/ --cuda 1```
 
 Running for RegionViT from a pretrained model:
