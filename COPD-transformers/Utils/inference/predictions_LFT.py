@@ -69,83 +69,31 @@ def balanced_accuracy_torch(outputs, labels, num_classes=None, average="micro"):
 def Predictor_LFT(main_path,
                 num_slices,
                 cuda_id,
-                how,
                 project_name,
-                output_type,
-                input_type,
                 vars_add,
-                wrapping_mode,
-                axis):
+                wrapping_mode):
         
-    #### ECLIPSE CONFIG
-    v = "" #### "" for filtered or 0 for raw
-    L = "v1" #### v1 for v1 labels or v2 for v2 labels
-
-    if axis == "coronal":
-        axis_suffix = "-cor"
-    elif axis == "axial":
-        axis_suffix = ""
-
     # ----------- PATHS & DEVICE -----------
     cuda_set = f"cuda:{cuda_id}"
 
     device = torch.device(cuda_set if torch.cuda.is_available() else "cpu")
     torch.cuda.empty_cache()
 
-    if num_slices == 9:
-        fusion_type = "C"
-    elif num_slices == 20:
-        fusion_type = "W"
-    else:
-        raise ValueError("num_slices must be 9 or 20.")
-    
-    added = [0,-1,1,0]
-    model_id = [1,2,3,4]
+    added = -1
 
     # ----------- DATASET -----------
 
-    if output_type == "EMPH":
-        diagnosis = "emph_cat_P1"
-        model_name0 = "copd"
-        IT = 0
-    elif output_type == "COPD":
-        diagnosis = "finalgold_visit_P1"
-        model_name0 = "copd"
-        IT = 2
-    elif output_type == "TRAJ":
-        diagnosis = "traj"
-        model_name0 = "traj"
-        IT = 1
-    elif output_type == "TRAP":
-        diagnosis = "trap"
-        model_name0 = "gas"
-        IT = 3
-    else:
-        raise ValueError(f"Unsupported model: {output_type}")
-
-    if project_name == "ECLIPSE":
-        features_dir = os.path.join(main_path, f"{project_name}-embeddings/{project_name}{model_id[IT]}-features")
-    else:
-        features_dir = os.path.join(main_path, f"{project_name}-embeddings/{project_name}-features")
-
-    if project_name == "ECLIPSE":
-        project_name_dir = "COPDGene"
-        csv_path = os.path.join(main_path, f"{project_name_dir}-files",f"df_val_eclipse.csv")
-    else:
-        project_name_dir = project_name
-        csv_path = os.path.join(main_path, f"{project_name_dir}-files",f"df_val_{model_name0}.csv")
+    features_dir = os.path.join(main_path, f"{project_name}-embeddings/{project_name}-features")
+    project_name_dir = project_name
+    csv_path = os.path.join(main_path, f"{project_name_dir}-files",f"df_val_traj.csv")
 
     models_path = os.path.join(main_path, f"{project_name_dir}-checkpoints/checkpoints-LFT/")
     save_path = os.path.join(main_path, f"{project_name}-results/models")
     os.makedirs(save_path, exist_ok=True)
 
-    if project_name == "ECLIPSE":
-        valid_features_path = os.path.join(f"{features_dir}-{num_slices}{axis_suffix}", f"test_features{v}.npy")
-        valid_labels_path = os.path.join(f"{features_dir}-{num_slices}{axis_suffix}", f"test_labels_{L}.npy")
-    else:
-        valid_features_path = os.path.join(f"{features_dir}-{num_slices}{axis_suffix}", f"{how}_test_features_{input_type}.npy")
-        valid_labels_path = os.path.join(f"{features_dir}-{num_slices}{axis_suffix}", f"{how}_test_labels_{input_type}.npy")
-
+    valid_features_path = os.path.join(f"{features_dir}", f"test_features.npy")
+    valid_labels_path = os.path.join(f"{features_dir}", f"test_labels.npy")
+    
     # ----------- MODEL LOADING -----------
     class FeatureDataset(Dataset):
         def __init__(self, features_path, labels_path, csv_path, vars_add0, stats=None):
@@ -160,19 +108,17 @@ def Predictor_LFT(main_path,
                 df.rename(columns={df.columns[0]: "sid"}, inplace=True)
 
             if self.vars_add0 != 0:
-                required_cols = ["age_visit_P1", "gender_P1", "ATS_PackYears_P1", "pctEmph_Thirona_P1", "race_P1", "BMI_P1"]
+                required_cols = ["age", "gender", "packs", "emph", "race", "bmi"]
                 for col in required_cols:
                     if col not in df.columns:
                         raise ValueError(f"CSV missing required column: {col}")
                     
-                gender_map = {'M': 0.0, 'F': 1.0}
-                race_map = {'African American/African Heritage':1.0, 'White - White/Caucasian/European Heritage': 0.0}
-                self.col_A = df["age_visit_P1"].values.astype(float)
-                self.col_B = df["gender_P1"].map(gender_map).values.astype(float)
-                self.col_C = df["ATS_PackYears_P1"].values.astype(float)
-                self.col_D = df["pctEmph_Thirona_P1"].values.astype(float)
-                self.col_E = df["race_P1"].map(race_map).values.astype(float)
-                self.col_F = df["BMI_P1"].values.astype(float)
+                self.col_A = df["age"].values.astype(float)
+                self.col_B = df["gender"].values.astype(float)
+                self.col_C = df["packs"].values.astype(float)
+                self.col_D = df["emph"].values.astype(float)
+                self.col_E = df["race"].values.astype(float)
+                self.col_F = df["bmi"].values.astype(float)
 
                 self.age_mean = self.col_A.mean()
                 self.age_std  = self.col_A.std() + 1e-6
@@ -258,16 +204,8 @@ def Predictor_LFT(main_path,
                     meta = torch.tensor([race_norm], dtype=torch.float32)
                 elif self.vars_add0 == 15:
                     meta = torch.tensor([packs_norm], dtype=torch.float32)            
-                elif self.vars_add0 == 16:
-                    meta = torch.tensor([age_norm, bmi_norm/(gender_norm+1.0),emph_norm], dtype=torch.float32)            
-                elif self.vars_add0 == 17:
-                    meta = torch.tensor([age_norm/bmi_norm+emph_norm], dtype=torch.float32)            
-                elif self.vars_add0 == 18:
-                    meta = torch.tensor([packs_norm/emph_norm,age_norm/bmi_norm], dtype=torch.float32)            
-                elif self.vars_add0 == 19:
-                    meta = torch.tensor([gender_norm,race_norm], dtype=torch.float32)            
                 else:
-                    meta = torch.tensor([age_norm], dtype=torch.float32)
+                    raise ValueError("metadata add value not allowed, please choose between 1-15")
 
                 return feat, meta, labels
         
@@ -276,30 +214,19 @@ def Predictor_LFT(main_path,
                 return feat, labels
 
     vars_add0 = vars_add
-    if vars_add0 in [7,9,11,18,19]:
+    if vars_add0 in [7,9,11]:
         vars_add = 2
-    elif vars_add0 in [8,16]:
+    elif vars_add0 in [8]:
         vars_add = 3
-    elif vars_add0 in [10,12,13,14,15,17]:
+    elif vars_add0 in [10,12,13,14,15]:
         vars_add = 1
     else:
         vars_add = vars_add0
 
     ### dim adding for age and/or gender and/or pack-years
     feat_dim = 1024
-    if len(input_type) != 1:
-        if how == "concat":
-            vec_dim = feat_dim*len(input_type)+vars_add
-            original_vec_dim = feat_dim*len(input_type)
-        elif how == "mix":
-            vec_dim = feat_dim*(len(input_type)-1)+vars_add
-            original_vec_dim = feat_dim*(len(input_type)-1)
-        else:
-            vec_dim = feat_dim+vars_add
-            original_vec_dim = feat_dim
-    else:
-        vec_dim = feat_dim+vars_add
-        original_vec_dim = feat_dim
+    vec_dim = feat_dim+vars_add
+    original_vec_dim = feat_dim
 
     print(f"Vector dimension of features + metadata = {vec_dim}")
 
@@ -308,15 +235,8 @@ def Predictor_LFT(main_path,
     ## available params: num_vectors, vec_dim, num_classes, dim, depth, heads, mlp_dim, pool, dim_head, dropout, emb_dropout
 
     task_labels = np.load(valid_labels_path)
+    task_labels = task_labels.squeeze() + added
 
-    if project_name == "ECLIPSE":
-        task_labels = task_labels.squeeze()
-    else:
-        task_labels = task_labels[:,IT] + added[IT]
-
-    if output_type == "COPD":
-        task_labels[task_labels == -1] = 0
-    
     mask = ~np.isnan(task_labels)
     task_labels = task_labels[mask]
 
@@ -330,12 +250,6 @@ def Predictor_LFT(main_path,
 
     task_labels = task_labels.astype(np.int64)
     counts = np.bincount(task_labels, minlength=num_classes)
-    if project_name == "ECLIPSE":
-        weights = 1.0/counts
-        balanced_priors = torch.tensor(weights, dtype=torch.float32, device=device)
-    else:
-        balanced_priors = torch.tensor(counts/counts.sum(), dtype=torch.float32, device=device)
-
     balanced_priors = torch.tensor(counts/counts.sum(), dtype=torch.float32, device=device)
 
     print("Priors: ",balanced_priors)
@@ -496,7 +410,7 @@ def Predictor_LFT(main_path,
             meta_output_dim=vec_dim,
             original_vec_dim=original_vec_dim).to(device)
 
-    checkpoint_path = os.path.join(models_path, f"best_LFT_{output_type}_{fusion_type}-{how}_{input_type}_{vars_add0}_{wrapping_mode}{axis_suffix}.pt")
+    checkpoint_path = os.path.join(models_path, f"best_LFT_{vars_add0}_{wrapping_mode}.pt")
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
     train_stats = checkpoint.get("train_stats")
     model.load_state_dict(checkpoint["model_state_dict"])
@@ -525,12 +439,7 @@ def Predictor_LFT(main_path,
                     out_idx.append(ix)
                     continue # Skip if whole batch was NaN
                 
-                if project_name == "ECLIPSE":
-                    labels = labels.squeeze()
-                else:
-                    labels = labels[:,IT]
-                    labels = labels.squeeze() + added[IT]
-
+                labels = labels.squeeze() + added
                 labels = labels.to(device).long()
                 input_features = features.squeeze(2).to(device)
                 outputs = model(input_features)
@@ -541,12 +450,7 @@ def Predictor_LFT(main_path,
                     out_idx.append(ix)
                     continue  # Skip if whole batch was NaN
 
-                if project_name == "ECLIPSE":
-                    labels = labels.squeeze()
-                else:
-                    labels = labels[:,IT]
-                    labels = labels.squeeze() + added[IT]
-
+                labels = labels.squeeze() + added
                 labels = labels.to(device).long()
                 input_features = features.squeeze(2).to(device)
                 meta_data = meta_data.to(device)
@@ -564,9 +468,9 @@ def Predictor_LFT(main_path,
             pred_idx = torch.argmax(weighted_probs, dim=1).item()
             raw_idx = torch.argmax(probs, dim=1).item()
 
-            real[ix] = labels.item() - added[IT]
-            pred[ix] = pred_idx - added[IT]
-            raw[ix] = raw_idx - added[IT]
+            real[ix] = labels.item() - added
+            pred[ix] = pred_idx - added
+            raw[ix] = raw_idx - added
             probabs[ix] = weighted_probs.cpu().numpy().flatten()
             probabs_raw[ix] = probs.cpu().numpy().flatten()
             
@@ -587,33 +491,30 @@ def Predictor_LFT(main_path,
     print(f"Raw Accuracy (Raw): {raw_balanced_acc:.2f}%")
 
     # ----------- SAVE RESULTS -----------
-    if project_name == "ECLIPSE":
-        base_csv = os.path.join(save_path, f"model_LFT_{output_type}_{fusion_type}-{how}_{input_type}_{vars_add0}_{wrapping_mode}{axis_suffix}_{L}_{v}.csv")
-        probs_csv = os.path.join(save_path, f"probs_LFT_{output_type}_{fusion_type}-{how}_{input_type}_{vars_add0}_{wrapping_mode}{axis_suffix}_{L}_{v}.csv")
-        raw_probs_csv =  os.path.join(save_path, f"rawprobs_LFT_{output_type}_{fusion_type}-{how}_{input_type}_{vars_add0}_{wrapping_mode}{axis_suffix}_{L}_{v}.csv")
-    else:
-        base_csv = os.path.join(save_path, f"model_LFT_{output_type}_{fusion_type}-{how}_{input_type}_{vars_add0}_{wrapping_mode}{axis_suffix}.csv")
-        probs_csv = os.path.join(save_path, f"probs_LFT_{output_type}_{fusion_type}-{how}_{input_type}_{vars_add0}_{wrapping_mode}{axis_suffix}.csv")
-        raw_probs_csv =  os.path.join(save_path, f"rawprobs_LFT_{output_type}_{fusion_type}-{how}_{input_type}_{vars_add0}_{wrapping_mode}{axis_suffix}.csv")
+    
+    base_csv = os.path.join(save_path, f"model_LFT_{vars_add0}_{wrapping_mode}.csv")
+    probs_csv = os.path.join(save_path, f"probs_LFT_{vars_add0}_{wrapping_mode}.csv")
+    raw_probs_csv =  os.path.join(save_path, f"rawprobs_LFT_{vars_add0}_{wrapping_mode}.csv")
 
     df = pd.DataFrame({
         "data": n_samples_clean,
         "label": real.astype(int),
         "raw": raw.astype(int),
         "predicted": pred.astype(int)})
+    
     df.to_csv(base_csv, index=False)
 
-    prob_df = pd.DataFrame(probabs, columns=[f"probs_class{i - added[IT]}" for i in range(num_classes)])
+    prob_df = pd.DataFrame(probabs, columns=[f"probs_class{i - added}" for i in range(num_classes)])
     prob_df.insert(0, "data", n_samples_clean)
     prob_df.insert(1, "label", real.astype(int))
     prob_df.to_csv(probs_csv, index=False)
 
-    raw_prob_df = pd.DataFrame(probabs_raw, columns=[f"probs_class{i - added[IT]}" for i in range(num_classes)])
+    raw_prob_df = pd.DataFrame(probabs_raw, columns=[f"probs_class{i - added}" for i in range(num_classes)])
     raw_prob_df.insert(0, "data", n_samples_clean)
     raw_prob_df.insert(1, "label", real.astype(int))
     raw_prob_df.to_csv(raw_probs_csv, index=False)
 
-    print(f"\nFinished predicting for {output_type}.")
+    print(f"\nFinished predicting.")
     print(f"  Saved summary: {base_csv}")
     print(f"  Saved probabilities: {probs_csv}")
     print(f"  Saved raw probabilities: {raw_probs_csv}")

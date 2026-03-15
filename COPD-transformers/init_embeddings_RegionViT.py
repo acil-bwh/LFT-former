@@ -62,94 +62,19 @@ class GroupedSliceDataset(Dataset):
 
         imgs = torch.stack(imgs, dim=0)
 
-        # Labels per task as tuple
         if self.label_cols is not None:
             labels = tuple(torch.tensor(row[col]).float() for col in self.label_cols)
         else:
-            labels = (torch.tensor(int(group.iloc[0, 1]) + self.add),)
+            labels = torch.tensor(int(group.iloc[0, 1]) + self.add).float()
 
         return imgs, labels
 
 # ---------------- CSV Loader ----------------
-def read_files(file_path, num_slices, model_id, project_name, axis):
-    diagnosis = ["File name","emph_cat_P1","traj","finalgold_visit_P1","PRM_pct_airtrapping_Thirona_P1"]
-    if model_id in [1,3,4,5,6]:
-        model_name = "COPDEmph"
-    elif model_id == 2:
-        model_name = "TRAJ"
-    else:
-        raise ValueError(f"Unsupported model id: {model_id}")
-
-    if num_slices == 9:
-        if axis == "coronal":
-            raise ValueError(f"Can only be the original axial model")
-        elif axis == "axial":
-            train_list = pd.read_csv(file_path+f'/training_{model_name}_{project_name}.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
-            val_list = pd.read_csv(file_path+f'/validation_{model_name}_{project_name}.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
-            test_list = pd.read_csv(file_path+f'/testing_{model_name}_{project_name}.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
-    
-    elif num_slices == 20:
-        if axis == "coronal":
-            train_list = pd.read_csv(file_path+f'/training_{model_name}_{project_name}_cor.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
-            val_list = pd.read_csv(file_path+f'/validation_{model_name}_{project_name}_cor.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
-            test_list = pd.read_csv(file_path+f'/testing_{model_name}_{project_name}_cor.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
-        elif axis == "axial":
-            train_list = pd.read_csv(file_path+f'/training_{model_name}_{project_name}_all.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
-            val_list = pd.read_csv(file_path+f'/validation_{model_name}_{project_name}_all.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
-            test_list = pd.read_csv(file_path+f'/testing_{model_name}_{project_name}_all.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
-    
-    if model_id == 3:
-        target_col = "finalgold_visit_P1"
-        def bin_labels(val):
-            if val < -1:
-                return 0
-            else: 
-                return val
-
-        train_list[target_col] = train_list[target_col].apply(bin_labels)
-        val_list[target_col] = val_list[target_col].apply(bin_labels)
-        test_list[target_col] = test_list[target_col].apply(bin_labels)
-
-    if model_id == 4:
-        target_col = "PRM_pct_airtrapping_Thirona_P1"
-        def bin_labels(val):
-            if val <= 10:
-                return 0
-            elif 10 < val <= 20:
-                return 1
-            elif 20 < val <= 40:
-                return 2
-            else: # > 40
-                return 3
-
-        train_list[target_col] = train_list[target_col].apply(bin_labels)
-        val_list[target_col] = val_list[target_col].apply(bin_labels)
-        test_list[target_col] = test_list[target_col].apply(bin_labels)
-
-    if model_id == 5:
-        target_col = "finalgold_visit_P1"
-        def bin_labels(val):
-            if val <= 0:
-                return 0
-            else: 
-                return val
-
-        train_list[target_col] = train_list[target_col].apply(bin_labels)
-        val_list[target_col] = val_list[target_col].apply(bin_labels)
-        test_list[target_col] = test_list[target_col].apply(bin_labels)
-
-    if model_id == 6:
-        target_col = "finalgold_visit_P1"
-        def bin_labels(val):
-            if val <= 0:
-                return 0
-            else: 
-                return 1
-
-        train_list[target_col] = train_list[target_col].apply(bin_labels)
-        val_list[target_col] = val_list[target_col].apply(bin_labels)
-        test_list[target_col] = test_list[target_col].apply(bin_labels)
-
+def read_files(file_path, project_name):
+    diagnosis = ["File name","traj"]
+    train_list = pd.read_csv(file_path+f'/training_{project_name}.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
+    val_list = pd.read_csv(file_path+f'/validation_{project_name}.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
+    test_list = pd.read_csv(file_path+f'/testing_{project_name}.csv', sep=",", usecols=diagnosis,header=0,low_memory=False)
     return train_list, val_list, test_list
 
 # ---------------- Feature extraction ----------------
@@ -232,45 +157,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", type=str, required=True, help="Main project path")
     parser.add_argument("--cuda", type=int, default=0)
-    parser.add_argument("--model_id", type=int, default=2)
-    parser.add_argument("--slices", type=int, default=9)
+    parser.add_argument("--slices", type=int, default=20)
     parser.add_argument("--project_name", type=str, default="COPDGene")
     parser.add_argument("--n_augmentations", type=int, default=None)
-    parser.add_argument("--axis", type=str, default="axial")
     args = parser.parse_args()
 
     device = torch.device(f"cuda:{args.cuda}" if torch.cuda.is_available() else "cpu")
 
     files_dir = os.path.join(args.path, f"{args.project_name}-files")
-
-    # Define RegionViT model parameters
-    if args.model_id == 1:
-        num_classes = 4
-        window_type = "emph"
-    if args.model_id == 2:
-        num_classes = 6
-        window_type = "lung"
-    elif args.model_id == 3:
-        num_classes = 6
-        window_type = "copd"
-    elif args.model_id == 4:
-        num_classes = 4
-        window_type = "trap"
-    elif args.model_id == 5:
-        num_classes = 5
-        window_type = "copd"
-    elif args.model_id == 6:
-        num_classes = 2
-        window_type = "copd"
-
-    if args.axis == "coronal":
-        img_dir = os.path.join(args.path, f"{args.project_name}-{window_type}-cor")
-        model_path = os.path.join(args.path, f"{args.project_name}-checkpoints/checkpoints-RegionViT-cor/", f"best_RegionViT_{args.model_id}_cor.pt")
-        save_dir = os.path.join(args.path, f"COPDGene-embeddings/{args.project_name}{args.model_id}-features-{args.slices}-cor")
-    elif args.axis == "axial":
-        img_dir = os.path.join(args.path, f"{args.project_name}-{window_type}")
-        model_path = os.path.join(args.path, f"{args.project_name}-checkpoints/checkpoints-RegionViT/", f"best_RegionViT_{args.model_id}.pt")
-        save_dir = os.path.join(args.path, f"COPDGene-embeddings/{args.project_name}{args.model_id}-features-{args.slices}")
+    num_classes = 6
+    
+    img_dir = os.path.join(args.path, f"{args.project_name}-imgs")
+    model_path = os.path.join(args.path, f"{args.project_name}-checkpoints/checkpoints-RegionViT/", f"best_RegionViT.pt")
+    save_dir = os.path.join(args.path, f"COPDGene-embeddings/{args.project_name}-features")
 
     os.makedirs(save_dir, exist_ok=True)
         
@@ -288,16 +187,16 @@ if __name__ == "__main__":
     RegViT_model.eval()
 
     # Label adjustment based on model
-    add = {1:0, 2:-1, 3:1, 4:0, 5:0, 6:0}
+    add = -1
 
     # Read CSVs
-    train_list, val_list, test_list = read_files(files_dir, args.slices, args.model_id, args.project_name, args.axis)
+    train_list, val_list, test_list = read_files(files_dir, args.project_name)
 
     apply_transforms = transforms.Compose([
         transforms.Resize((224,224), antialias=True),
         transforms.RandomRotation(20)])
     
-    label_cols = ["emph_cat_P1","traj","finalgold_visit_P1","PRM_pct_airtrapping_Thirona_P1"]
+    label_cols = ["traj"]
 
     train_data = GroupedSliceDataset(train_list, transform=apply_transforms, slices_per_patient=args.slices, img_dir=img_dir, label_cols=label_cols, add=add)
     val_data = GroupedSliceDataset(val_list, transform=apply_transforms, slices_per_patient=args.slices, img_dir=img_dir, label_cols=label_cols, add=add)

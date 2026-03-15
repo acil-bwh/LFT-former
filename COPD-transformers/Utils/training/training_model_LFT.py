@@ -71,7 +71,6 @@ def Trainer_LFT(main_path,
                epochs,
                batch_size,
                load_pretrained,
-               how,
                load_from_checkpoint,
                lr,
                gamma,
@@ -79,55 +78,44 @@ def Trainer_LFT(main_path,
                optzr,
                schdr,
                weight_decay,
-               output_type,
-               input_type,
                vars_add,
-               wrapping_mode,
-               axis):
+               wrapping_mode):
     
     """
-    Train a multi-slice Trainer_clinLFT model with patient-level features.
+    Train the multi-slice LFT-former with/without patient-level features.
 
     Args:
         main_path (str): Root directory path.
-        num_slices (int): Slices per patient (e.g., 9 or 20).
         cuda_id (int): GPU device ID.
         project_name (str): Project prefix.
         epochs (int): Training epochs.
         batch_size (int): Batch size.
-        how (str): Type of fusion of multimodal weights, if any.
         lr (float): Learning rate.
         weight_decay (float): L2 weight decay.
         gamma (float): LR scheduler decay.
         load_pretrained (bool): Whether to initialize weights from pretrained model.
         load_from_checkpoint (bool): Whether to resume from checkpoint.
-        input_type (str): E, C, T, EC, ET, CT, ETC.
-        add (int): 1: age, 2: age+gender, 3: age+gender+packs
+        add (int): 1: age, 2: age+gender, 3: age+gender+packs...
         wrapping_mode (str): concat, modular, gatt, gate
     """    
     
-    print("\n================ Trainer_clinLFT Configuration ================")
+    print("\n================ LFT Configuration ================")
     print(f" Main path: {main_path}")
     print(f" Project: {project_name}")
     print(f" Loading from: {project_name}")
-    print(f" Num slices: {num_slices}")
     print(f" CUDA device: {cuda_id}")
     print(f" Epochs: {epochs}")
     print(f" Batch size: {batch_size}")
-    print(f" Fusion of weights: {how}")
     print(f" Optimizer: {optzr}")
     print(f" Scheduler: {schdr}")
     print(f" Gamma: {gamma}")
     print(f" Step: {step}")
     print(f" Learning rate: {lr}")
     print(f" Weight decay: {weight_decay}")
-    print(f" Which input: {input_type}")
-    print(f" Which output: {output_type}")
     print(f" Wrapping mode: {wrapping_mode}")
     print(f" Pretrained model: {load_pretrained}")
     print(f" Resume checkpoint: {load_from_checkpoint}")
-    print(f" Axis of 2D slices: {axis}")
-    print("========================================================\n")
+    print("=======================================================\n")
 
     # ---------------- DEVICE ----------------
     device = torch.device(f"cuda:{cuda_id}" if torch.cuda.is_available() else "cpu")
@@ -137,33 +125,7 @@ def Trainer_LFT(main_path,
     main_checkpoint_path = os.path.join(main_path, f"{project_name}-checkpoints/checkpoints-LFT")
     os.makedirs(main_checkpoint_path, exist_ok=True)
     
-    if output_type == "EMPH":
-        diagnosis = "emph_cat_P1"
-        model_name0 = "copd"
-        IT = 0
-    elif output_type == "COPD":
-        diagnosis = "finalgold_visit_P1"
-        model_name0 = "copd"
-        IT = 2
-    elif output_type == "TRAJ":
-        diagnosis = "traj"
-        model_name0 = "traj"
-        IT = 1
-    elif output_type == "TRAP":
-        diagnosis = "trap"
-        model_name0 = "gas"
-        IT = 3
-    else:
-        raise ValueError(f"Unsupported model: {output_type}")
-
-    if num_slices == 9:
-        fusion_type = "C"
-    elif num_slices == 20:
-        fusion_type = "W"
-    else:
-        raise ValueError("num_slices must be 9 or 20.")
-
-    added = [0,-1,1,0]
+    added = -1
  
     class FeatureDataset(Dataset):
         def __init__(self, features_path, labels_path, csv_path, vars_add0, stats=None):
@@ -178,17 +140,17 @@ def Trainer_LFT(main_path,
                 df.rename(columns={df.columns[0]: "sid"}, inplace=True)
 
             if self.vars_add0 != 0:
-                required_cols = ["age_visit_P1", "gender_P1", "ATS_PackYears_P1", "pctEmph_Thirona_P1", "race_P1", "BMI_P1"]
+                required_cols = ["age", "gender", "packs", "emph", "race", "bmi"]
                 for col in required_cols:
                     if col not in df.columns:
                         raise ValueError(f"CSV missing required column: {col}")
                     
-                self.col_A = df["age_visit_P1"].values.astype(float)
-                self.col_B = df["gender_P1"].values.astype(float)
-                self.col_C = df["ATS_PackYears_P1"].values.astype(float)
-                self.col_D = df["pctEmph_Thirona_P1"].values.astype(float)
-                self.col_E = df["race_P1"].values.astype(float)
-                self.col_F = df["BMI_P1"].values.astype(float)
+                self.col_A = df["age"].values.astype(float)
+                self.col_B = df["gender"].values.astype(float)
+                self.col_C = df["packs"].values.astype(float)
+                self.col_D = df["emph"].values.astype(float)
+                self.col_E = df["race"].values.astype(float)
+                self.col_F = df["bmi"].values.astype(float)
 
                 self.age_mean = self.col_A.mean()
                 self.age_std  = self.col_A.std() + 1e-6
@@ -273,70 +235,40 @@ def Trainer_LFT(main_path,
                 elif self.vars_add0 == 14:
                     meta = torch.tensor([race_norm], dtype=torch.float32)
                 elif self.vars_add0 == 15:
-                    meta = torch.tensor([packs_norm], dtype=torch.float32)            
-                elif self.vars_add0 == 16:
-                    meta = torch.tensor([age_norm, bmi_norm/(gender_norm+1.0),emph_norm], dtype=torch.float32)            
-                elif self.vars_add0 == 17:
-                    meta = torch.tensor([age_norm/bmi_norm+emph_norm], dtype=torch.float32)            
-                elif self.vars_add0 == 18:
-                    meta = torch.tensor([packs_norm/emph_norm,age_norm/bmi_norm], dtype=torch.float32)            
-                elif self.vars_add0 == 19:
-                    meta = torch.tensor([gender_norm,race_norm], dtype=torch.float32)            
+                    meta = torch.tensor([packs_norm], dtype=torch.float32)                       
                 else:
-                    meta = torch.tensor([age_norm], dtype=torch.float32)
+                    raise ValueError("metadata add value not allowed, please choose between 1-15")
 
                 return feat, meta, labels
         
             return feat, labels
 
     vars_add0 = vars_add
-    if vars_add0 in [7,9,11,18,19]:
+    if vars_add0 in [7,9,11]:
         vars_add = 2
-    elif vars_add0 in [8,16]:
+    elif vars_add0 in [8]:
         vars_add = 3
-    elif vars_add0 in [10,12,13,14,15,17]:
+    elif vars_add0 in [10,12,13,14,15]:
         vars_add = 1
     else:
         vars_add = vars_add0
 
     ### dim adding for age and/or gender and/or pack-years...
     feat_dim = 1024
-    if len(input_type) != 1:
-        if how == "concat":
-            vec_dim = feat_dim*len(input_type)+vars_add
-            original_vec_dim = feat_dim*len(input_type)
-        elif how == "mix":
-            vec_dim = feat_dim*(len(input_type)-1)+vars_add
-            original_vec_dim = feat_dim*(len(input_type)-1)
-        else:
-            vec_dim = feat_dim+vars_add
-            original_vec_dim = feat_dim
-    else:
-        vec_dim = feat_dim+vars_add
-        original_vec_dim = feat_dim
+    vec_dim = feat_dim+vars_add
+    original_vec_dim = feat_dim
 
     print(f"Vector dimension of features + metadata = {vec_dim}")
 
-    csv_path = os.path.join(main_path, f"{project_name}-files",f"df_train_{model_name0}.csv")
+    csv_path = os.path.join(main_path, f"{project_name}-files",f"df_train_traj.csv")
 
     # ------------------ Create dataset ------------------
 
-    if axis == "coronal":
-        axis_suffix = "-cor"
-    elif axis == "axial":
-        axis_suffix = ""
-
     from torch.utils.data import random_split
-    print(f"Number of embeddings used for the model: {len(input_type)}")
 
-    if len(input_type) == 1:
-        features_dir = os.path.join(main_path, f"{project_name}-embeddings/{project_name}{IT+1}-features")
-        features_path = os.path.join(f"{features_dir}-{num_slices}{axis_suffix}", f"train_features.npy")
-        labels_path = os.path.join(f"{features_dir}-{num_slices}{axis_suffix}", f"train_labels.npy")
-    else:
-        features_dir = os.path.join(main_path, f"{project_name}-embeddings/{project_name}-features")
-        features_path = os.path.join(f"{features_dir}-{num_slices}{axis_suffix}", f"{how}_train_features_{input_type}.npy")
-        labels_path = os.path.join(f"{features_dir}-{num_slices}{axis_suffix}", f"{how}_train_labels_{input_type}.npy")
+    features_dir = os.path.join(main_path, f"{project_name}-embeddings/{project_name}-features")
+    features_path = os.path.join(f"{features_dir}-{num_slices}", f"train_features.npy")
+    labels_path = os.path.join(f"{features_dir}-{num_slices}", f"train_labels.npy")
     
     print(f"\Full dataset loading from {features_path} and {labels_path}")
 
@@ -355,9 +287,7 @@ def Trainer_LFT(main_path,
         val_dataset.dataset.stats = train_stats
 
     labels = np.load(labels_path)
-    labels = labels[:,IT].squeeze() + added[IT]
-    if output_type == "COPD":
-        labels[labels == -1] = 0
+    labels = labels.squeeze() + added
 
     unique_values, counts = np.unique(labels, return_counts=True)
     print(f"Total Unique Values: {len(unique_values)}")
@@ -500,7 +430,7 @@ def Trainer_LFT(main_path,
                 fused_tensor = feat_embedding * (1 + combined_scale)
 
             else:
-                raise ValueError("Only accepted modes: modular, gate, gatt, cross, along, dot or concat")
+                raise ValueError("Only accepted modes: modular, gate, gatt, cross, multi, along, dot or concat")
 
             output = self.transformer_model(fused_tensor)
             
@@ -550,7 +480,7 @@ def Trainer_LFT(main_path,
         scheduler = StepLR(optimizer, step_size=step, gamma=gamma)
     
     if load_pretrained == True and load_from_checkpoint == False:
-        checkpoint_path = os.path.join(main_path, f"{project_name}-models/model_LFT_{output_type}_{fusion_type}-{how}_{input_type}_{vars_add0}_{wrapping_mode}{axis_suffix}.pt")
+        checkpoint_path = os.path.join(main_path, f"{project_name}-models/model_LFT_{vars_add0}_{wrapping_mode}.pt")
         checkpoint = torch.load(checkpoint_path, map_location="cpu")
         model.load_state_dict(checkpoint["model_state_dict"])
         last_epoch = 0
@@ -558,7 +488,7 @@ def Trainer_LFT(main_path,
         print(f"Loaded pretrained weights from {checkpoint_path}\n")
 
     elif load_from_checkpoint == True and load_pretrained == False:
-        checkpoint_path = os.path.join(main_checkpoint_path, f"best_LFT_{output_type}_{fusion_type}-{how}_{input_type}_{vars_add0}_{wrapping_mode}{axis_suffix}.pt")
+        checkpoint_path = os.path.join(main_checkpoint_path, f"best_LFT_{vars_add0}_{wrapping_mode}.pt")
         checkpoint = torch.load(checkpoint_path, map_location=device)
         model.load_state_dict(checkpoint['model_state_dict'])
         model = model.to(device=device)
@@ -608,10 +538,8 @@ def Trainer_LFT(main_path,
                 meta_data = meta_data.to(device)
                 outputs = model(input_features,meta_data)
 
-            labels = labels[:,IT].squeeze()
-            labels = labels.to(device).long() + added[IT]
-            if output_type == "COPD":
-                labels[labels == -1] = 0
+            labels = labels.squeeze()
+            labels = labels.to(device).long() + added
             
             outputs = outputs.to(device)
 
@@ -646,10 +574,8 @@ def Trainer_LFT(main_path,
                     meta_data = meta_data.to(device)
                     outputs = model(input_features,meta_data)
 
-                labels = labels[:,IT].squeeze()
-                labels = labels.to(device).long() + added[IT]
-                if output_type == "COPD":
-                    labels[labels == -1] = 0
+                labels = labels.squeeze()
+                labels = labels.to(device).long() + added
                     
                 outputs = outputs.to(device)
 
@@ -682,7 +608,7 @@ def Trainer_LFT(main_path,
             best_epoch = epoch + 1
             epochs_no_improve = 0
 
-            best_model_path = os.path.join(main_checkpoint_path, f"best_LFT_{output_type}_{fusion_type}-{how}_{input_type}_{vars_add0}_{wrapping_mode}{axis_suffix}.pt")
+            best_model_path = os.path.join(main_checkpoint_path, f"best_LFT_{vars_add0}_{wrapping_mode}.pt")
             
             if vars_add !=0:
                 torch.save({
@@ -708,7 +634,7 @@ def Trainer_LFT(main_path,
             print(f"Early stopping triggered at epoch {epoch+1}. Best epoch: {best_epoch} (val_acc: {best_val_acc:.4f})")
             break
         
-    final_model_path = os.path.join(main_path, f"{project_name}-models/model_LFT_{output_type}_{fusion_type}-{how}_{input_type}_{vars_add0}_{wrapping_mode}{axis_suffix}.pt")
+    final_model_path = os.path.join(main_path, f"{project_name}-models/model_LFT_{vars_add0}_{wrapping_mode}.pt")
     os.makedirs(os.path.dirname(final_model_path), exist_ok=True)
     torch.save({"model_state_dict": model.state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
@@ -716,7 +642,7 @@ def Trainer_LFT(main_path,
 
     print("\nTraining complete.")
     print(f"Saved final model at: {final_model_path}")
-    print(f"Best LFT using {input_type} for {output_type} model axis: {axis_suffix} adding: {vars_add0} and wrapping {wrapping_mode} saved at epoch {last_epoch+best_epoch} with val_acc: {best_val_acc:.4f}")
+    print(f"Best LFT adding: {vars_add0} and wrapping {wrapping_mode} saved at epoch {last_epoch+best_epoch} with val_acc: {best_val_acc:.4f}")
 
     return {"train_loss": training_loss,
         "val_loss": validation_loss,

@@ -39,6 +39,7 @@ _REQUIRED MODULES:_
   - .../{project_name}-files --> where files are saved
   - .../{project_name}-imgs --> where imgs in npy or png are saved
   - .../{project_name}-checkpoints --> where checkpoints will be saved
+  - .../{project_name}-models --> where final models will be saved
   - .../{project_name}-embeddings --> where embeddings will be saved
   - .../{project_name}-results --> where your results will be saved
     > figures <br>
@@ -75,8 +76,8 @@ _REQUIRED MODULES:_
     - wrapp (default:"gatt")
     - add (default:0)
     
-ADD can be: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) --> Which metadata tensor of clinical features is fused with image-based embeddings:
- 
+ADD can be: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) --> Which metadata tensor of clinical features is fused with image-based embeddings. Variables should be stored as: ["age", "gender", "packs", "emph", "race", "bmi"]
+
 0.	Only CT imaging
 1.	CT + Age
 2.	CT + Age + Gender
@@ -100,7 +101,7 @@ WRAP can be: ("gatt" "gate" "modular" "along" "concat" "dot" "cross" "multi") --
 ### RegionViT: Training
 
 Running for RegionViT from scratch: 
- D
+
 ```python LFT-former/COPD-transformers/init_training_RegionViT.py --path /your/path/ --cuda 1```
 
 Running for RegionViT from a pretrained model:
@@ -113,7 +114,7 @@ Running for RegionViT from a previous checkpoint:
 
 ### RegionViT: Obtaining embeddings
 
-```python LFT-former/COPD-transformers/Compute-embeddings/init_embeddings_RegionViT.py --path "/home/qm031/" --cuda 1 --n_augmentations 10```
+```python LFT-former/COPD-transformers/init_embeddings_RegionViT.py --path "/home/qm031/" --cuda 1 --n_augmentations 10```
 
 ### LFT-former: Training
 

@@ -35,76 +35,9 @@ def seed_everything(seed):
 seed = 3
 seed_everything(seed)
 
-def read_files(file_path,model_id,project_name,axis):
-    if model_id == 1 or model_id == 3:
-        diagnosis = "finalgold_visit_P1" if model_id == 3 else "emph_cat_P1"
-        model_name = "COPDEmph"
-    elif model_id == 2:
-        diagnosis = "traj"
-        model_name = "TRAJ"
-    elif model_id == 4:
-        diagnosis = "PRM_pct_airtrapping_Thirona_P1"
-        model_name = "COPDEmph"
-    elif model_id == 5 or model_id == 6: ###### 5 and 2 classes COPD
-        diagnosis = "finalgold_visit_P1"
-        model_name = "COPDEmph"
-    else:
-        raise ValueError(f"Unsupported model id: {model_id}")
-    
-    if axis == "coronal":
-        axis_suffix = "_cor"
-    elif axis == "axial":
-        axis_suffix = ""
-
-    train_list = pd.read_csv(file_path+f'/training_{model_name}_{project_name}{axis_suffix}.csv', sep=",", usecols=['File name',diagnosis],header=0,low_memory=False)
-    val_list = pd.read_csv(file_path+f'/validation_{model_name}_{project_name}{axis_suffix}.csv', sep=",", usecols=['File name',diagnosis],header=0,low_memory=False)
-    
-    if model_id == 3:
-        def bin_labels(val):
-            if val < -1: # -2
-                return 0
-            else: # -1,0,1,2,3,4
-                return val
-
-        train_list[diagnosis] = train_list[diagnosis].apply(bin_labels)
-        val_list[diagnosis] = val_list[diagnosis].apply(bin_labels)
-
-    if model_id == 4:
-        def bin_labels(val):
-            if val <= 10:
-                return 0
-            elif 10 < val <= 20:
-                return 1
-            elif 20 < val <= 40:
-                return 2
-            else: # > 40
-                return 3
-
-        train_list[diagnosis] = train_list[diagnosis].apply(bin_labels)
-        val_list[diagnosis] = val_list[diagnosis].apply(bin_labels)
-
-    if model_id == 5:
-        def bin_labels(val):
-            if val <= 0:
-                return 0
-            else: # 1,2,3,4
-                return val
-
-        train_list[diagnosis] = train_list[diagnosis].apply(bin_labels)
-        val_list[diagnosis] = val_list[diagnosis].apply(bin_labels)
-    
-    if model_id == 6:
-        def bin_labels(val):
-            if val <= 0:
-                return 0
-            else: # 1,2,3,4
-                return 1
-
-        train_list[diagnosis] = train_list[diagnosis].apply(bin_labels)
-        val_list[diagnosis] = val_list[diagnosis].apply(bin_labels)
-
-    train_list = train_list[["File name", diagnosis]]
-    val_list = val_list[["File name", diagnosis]]
+def read_files(file_path,project_name):
+    train_list = pd.read_csv(file_path+f'/training_{project_name}.csv', sep=",", usecols=['File name','traj'],header=0,low_memory=False)
+    val_list = pd.read_csv(file_path+f'/validation_{project_name}.csv', sep=",", usecols=['File name','traj'],header=0,low_memory=False)
     return train_list, val_list
 
 class MyDataset(Dataset):
@@ -144,7 +77,6 @@ class MyDataset(Dataset):
         return img_transformed, label
 
 def Trainer(main_path,
-        model_id,
         batch_size,
         epochs,
         cuda_id,
@@ -154,58 +86,20 @@ def Trainer(main_path,
         lr,
         gamma,
         weight_decay,
-        step,
-        axis):
+        step):
+    
+        print('···· TRAJECTORIES MODEL ····')
+        num_classes = 6
+        add = -1
         
-        if model_id == 1:
-            print('···· EMPHYSEMA MODEL ····')
-            num_classes = 4
-            add = 0
-            window_type = "emph"
-        elif model_id == 2:
-            print('···· TRAJECTORIES MODEL ····')
-            num_classes = 6
-            add = -1
-            window_type = "lung"
-        elif model_id == 3:
-            print('···· COPD MODEL ····')
-            num_classes = 6
-            add = +1
-            window_type = "copd"
-        elif model_id == 4:
-            print('···· AIR TRAPPING MODEL ····')
-            num_classes = 4
-            add = 0
-            window_type = "trap"
-        elif model_id == 5:
-            print('···· COPD 5-class MODEL ····')
-            num_classes = 5
-            add = 0
-            window_type = "copd"
-        elif model_id == 6:
-            print('···· COPD 2-class MODEL ····')
-            num_classes = 2
-            add = 0
-            window_type = "copd"
-        else:
-            raise Exception("Sorry, invalid model (must be 1...6)")
-        
-        if axis == "coronal":
-            axis_suffix = "_cor"
-            model_suffix = "-cor"
-        elif axis == "axial":
-            source_imgs = f"{project_name}-{window_type}"
-            axis_suffix = ""
-            model_suffix = ""
-
         source_files = project_name+'-files'
-        source_imgs = f"{project_name}-{window_type}{model_suffix}"
+        source_imgs = f"{project_name}-imgs"
 
-        train_list, valid_list = read_files(source_files,model_id,project_name,axis)
+        train_list, valid_list = read_files(source_files,project_name)
 
         cuda_id = int(cuda_id)
         cuda_set = 'cuda:'+str(cuda_id)
-        main_checkpoint_path = main_path+project_name+f'-checkpoints/checkpoints-RegionViT{model_suffix}'
+        main_checkpoint_path = main_path+project_name+f'-checkpoints/checkpoints-RegionViT'
         data_path = main_path+source_imgs+'/'
 
         if not os.path.exists(main_checkpoint_path):
@@ -264,7 +158,6 @@ def Trainer(main_path,
         print(f"Embedding dropout: {emb_dropout}")
         print(f"Depth: {depth}")
         print(f"Dimension: {dim}")
-        print(f"Axis: {axis}")
         print(" ")
 
         model = RegionViT(
@@ -289,7 +182,7 @@ def Trainer(main_path,
         # scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5)
         
         if load_pretrained == True and load_from_checkpoint == False:
-            checkpoint_path = os.path.join(main_checkpoint_path, f"best_RegionViT_{model_id}{axis_suffix}.pt")
+            checkpoint_path = os.path.join(main_checkpoint_path, f"best_RegionViT.pt")
             checkpoint = torch.load(checkpoint_path, map_location="cpu")
             model.load_state_dict(checkpoint["model_state_dict"])
             model = model.to(device=device)
@@ -298,7 +191,7 @@ def Trainer(main_path,
             print(f"Loaded pretrained weights from {checkpoint_path}\n")
 
         elif load_from_checkpoint == True and load_pretrained == False:
-            checkpoint_path = os.path.join(main_checkpoint_path, f"best_RegionViT_{model_id}{axis_suffix}.pt")
+            checkpoint_path = os.path.join(main_checkpoint_path, f"best_RegionViT.pt")
             checkpoint = torch.load(checkpoint_path, map_location=device)
             model.load_state_dict(checkpoint['model_state_dict'])
             model = model.to(device=device)
@@ -359,14 +252,9 @@ def Trainer(main_path,
 
             for data, labels in tqdm(train_loader, desc=f"Epoch {epoch+1} [Train]"):
                 data, labels = data.to(device), labels.to(device)
-
-                if model_id == 3:
-                    labels[labels == -1.0] = 0.0   # replace -1 with 0
-
                 labels = labels.long().to(device)
                 
                 optimizer.zero_grad()
-
                 outputs = model(data)
                 loss = criterion(outputs, labels)
                 acc = multiclass_accuracy(outputs, labels, num_classes=num_classes)
@@ -387,14 +275,9 @@ def Trainer(main_path,
             with torch.no_grad():
                 for data, labels in tqdm(valid_loader, desc=f"Epoch {epoch+1} [Val]"):
                     data, labels = data.to(device), labels.to(device)
-
-                    if model_id == 3:
-                        labels[labels == -1.0] = 0.0   # replace -1 with 0
-
                     labels = labels.long().to(device)
-
+                    
                     outputs = model(data)
-
                     loss = criterion(outputs, labels)
                     acc = multiclass_accuracy(outputs, labels, num_classes=num_classes)
 
@@ -423,7 +306,7 @@ def Trainer(main_path,
                 best_epoch = epoch + 1
                 epochs_no_improve = 0
 
-                best_model_path = os.path.join(main_checkpoint_path, f"best_RegionViT_{model_id}{axis_suffix}.pt")
+                best_model_path = os.path.join(main_checkpoint_path, f"best_RegionViT.pt")
                 torch.save({
                     "epoch": epoch,
                     "model_state_dict": model.state_dict(),
@@ -440,7 +323,7 @@ def Trainer(main_path,
                 print(f"Early stopping triggered at epoch {epoch+1}. Best epoch: {best_epoch} (val_acc: {best_val_acc:.4f})")
                 break
             
-        final_model_path = os.path.join(main_path, f"{project_name}-models/model_RegionViT_{model_id}{axis_suffix}.pt")
+        final_model_path = os.path.join(main_path, f"{project_name}-models/model_RegionViT.pt")
         os.makedirs(os.path.dirname(final_model_path), exist_ok=True)
         torch.save({
             "model_state_dict": model.state_dict(),

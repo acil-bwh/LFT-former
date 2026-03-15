@@ -9,6 +9,8 @@ import argparse
 def create_project_structure(project_name, destination):
     project_structure = {
         f"{project_name}-checkpoints": [],
+        f"{project_name}-models": [],
+        f"{project_name}-embeddings": [],
         f"{project_name}-files": [],
         f"{project_name}-imgs": [],
         f"{project_name}-results": ["analysis", "figures", "metrics", "models", "patients"]}
