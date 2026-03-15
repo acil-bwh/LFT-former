@@ -169,7 +169,7 @@ if __name__ == "__main__":
     
     img_dir = os.path.join(args.path, f"{args.project_name}-imgs")
     model_path = os.path.join(args.path, f"{args.project_name}-checkpoints/checkpoints-RegionViT/", f"best_RegionViT.pt")
-    save_dir = os.path.join(args.path, f"COPDGene-embeddings/{args.project_name}-features")
+    save_dir = os.path.join(args.path, f"{args.project_name}-features")
 
     os.makedirs(save_dir, exist_ok=True)
         

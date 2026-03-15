@@ -28,7 +28,6 @@ _REQUIRED MODULES:_
 `cd your_path`
 * git clone into `your_path` -> ```git clone https://github.com/acil-bwh/LFT-former.git```
   - Functions --> general code files
-    > Compute-embeddings <br>
     > Utils <br>
       ...
   - README.md --> how to use this repository
