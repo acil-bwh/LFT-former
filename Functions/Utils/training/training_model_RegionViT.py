@@ -36,8 +36,8 @@ seed = 3
 seed_everything(seed)
 
 def read_files(file_path,project_name):
-    train_list = pd.read_csv(file_path+f'/training_{project_name}.csv', sep=",", usecols=['File name','traj'],header=0,low_memory=False)
-    val_list = pd.read_csv(file_path+f'/validation_{project_name}.csv', sep=",", usecols=['File name','traj'],header=0,low_memory=False)
+    train_list = pd.read_csv(file_path+f'/training_{project_name}_reduced.csv', sep=",", usecols=['File name','traj'],header=0,low_memory=False)
+    val_list = pd.read_csv(file_path+f'/validation_{project_name}_reduced.csv', sep=",", usecols=['File name','traj'],header=0,low_memory=False)
     return train_list, val_list
 
 class MyDataset(Dataset):

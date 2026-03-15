@@ -259,7 +259,7 @@ def Trainer_LFT(main_path,
     original_vec_dim = feat_dim
 
     print(f"Vector dimension of features + metadata = {vec_dim}")
-
+    
     csv_path = os.path.join(main_path, f"{project_name}-files",f"df_train_traj.csv")
 
     # ------------------ Create dataset ------------------

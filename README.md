@@ -34,6 +34,7 @@ _REQUIRED MODULES:_
   - README.md --> how to use this repository
   - requirements.txt --> required libraries
   - folder_setting.py --> generate folders where files, imgs are and where results will be stored
+  - file_processing.py --> generate files for training, validation and testing (requires main path, project name and total number of slices [in this example 9 for central and 20 for total, but can be toggled to your own project and CT subsampling])
 
 * generate folders -> ```python LFT-former/folder_setting.py```
   - .../{project_name}-files --> where files are saved

@@ -13,7 +13,7 @@ def create_project_structure(project_name, destination):
         f"{project_name}-embeddings": [],
         f"{project_name}-files": [],
         f"{project_name}-imgs": [],
-        f"{project_name}-results": ["analysis", "figures", "metrics", "models", "patients"]}
+        f"{project_name}-results": ["figures", "models", "patients"]}
 
     def build_dir(base_path, structure):
         if isinstance(structure, list):
