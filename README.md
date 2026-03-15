@@ -35,16 +35,12 @@ _REQUIRED MODULES:_
   - folder_setting.py --> generate folders where files, imgs are and where results will be stored
   - file_processing.py --> generate files for training, validation and testing (requires main path, project name and total number of slices [in this example 9 for central and 20 for total, but can be toggled to your own project and CT subsampling])
 
-* generate folders -> ```python LFT-former/folder_setting.py```
-  - .../{project_name}-files --> where files are saved
-  - .../{project_name}-imgs --> where imgs in npy or png are saved for IDs=1...N, in our example slices=20
-    > ID1_1.npy <br>
-    ... <br>
-    > ID1_20.npy <br>
-    ... <br>
-    > IDN_1.npy <br>
-    ... <br>
-    > IDN_20.npy <br>
+* generate folders -> ```python LFT-former/folder_setting.py``` 
+
+__OVERALL HIERARCHY BEFORE RUNNING LFT:__
+
+  - .../{project_name}-files --> store here your source csv files (see A)
+  - .../{project_name}-imgs --> store here your imgs (see B)
   - .../{project_name}-checkpoints --> where checkpoints will be saved
   - .../{project_name}-models --> where final models will be saved
   - .../{project_name}-embeddings --> where embeddings will be saved
@@ -53,9 +49,18 @@ _REQUIRED MODULES:_
     > models <br>
     > metrics
 
-<br> 
+IMAGE MANAGEMENT:
+Store the 2D scans in npy or png for IDs=1...N, in our example slices=20
+  > ID1_1.npy <br>
+  ... <br>
+  > ID1_20.npy <br>
+  ... <br>
+  > IDN_1.npy <br>
+  ... <br>
+  > IDN_20.npy <br>
 
-* a folder {project_name}-features will be added when computing the embeddings using init_embeddings_RegionViT.py --> where augmented features of RegionViT are stored
+FILE MANAGEMENT:
+In your original file, variables should be stored as: ["sid", "traj", "age", "gender", "packs", "emph", "race", "bmi"] and should be stored in {project_name}-files. Then, create the necessary subfiles using the provided function -> ```python LFT-former/file_processing.py```
 
 ## USAGE MANUAL
 
@@ -83,7 +88,7 @@ _REQUIRED MODULES:_
     - wrapp (default:"gatt")
     - add (default:0)
     
-ADD can be: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) --> Which metadata tensor of clinical features is fused with image-based embeddings. Variables should be stored as: ["age", "gender", "packs", "emph", "race", "bmi"]
+ADD can be: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) --> Which metadata tensor of clinical features is fused with image-based embeddings. 
 
 0.	Only CT imaging
 1.	CT + Age
