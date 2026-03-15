@@ -37,7 +37,7 @@ _REQUIRED MODULES:_
 
 * generate folders -> ```python LFT-former/folder_setting.py```
   - .../{project_name}-files --> where files are saved
-  - .../{project_name}-imgs --> where imgs in npy or png are saved, in our example slices=20
+  - .../{project_name}-imgs --> where imgs in npy or png are saved for IDs=1...N, in our example slices=20
     > ID1_1.npy
     ...
     > ID1_20.npy
