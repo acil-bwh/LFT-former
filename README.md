@@ -62,7 +62,7 @@ Store the 2D scans in npy or png for IDs=1...N, in our example slices=20. Make s
 Specifications: set window range to L=-700, W=1500, orient/rotate to LAS (left-anterior-superior)
 
 _FILE MANAGEMENT:_
-In your original file, variables should be stored as: ["sid", "traj", "age", "gender", "packs", "emph", "race", "bmi"] and should be stored in {project_name}-files. Then, create the necessary subfiles using the provided function -> ```python LFT-former/file_processing.py```
+In your original file, variables should be stored as: ["sid", "traj", "age", "gender", "packs", "emph", "race", "bmi"] and should be stored in `project_name`-files. Then, create the necessary subfiles using the provided function -> ```python LFT-former/file_processing.py```
 
 ## USAGE MANUAL
 
