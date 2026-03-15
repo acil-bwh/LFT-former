@@ -35,9 +35,16 @@ _REQUIRED MODULES:_
   - requirements.txt --> required libraries
   - folder_setting.py --> generate folders where files, imgs are and where results will be stored
 
-* generate folders -> ```python LFT-former/folder_setting.py > folder_setting.log 2>&1 &```
+* generate folders -> ```python LFT-former/folder_setting.py```
   - .../{project_name}-files --> where files are saved
-  - .../{project_name}-imgs --> where imgs in npy or png are saved
+  - .../{project_name}-imgs --> where imgs in npy or png are saved, in our example slices=20
+    > ID1_1.npy
+    ...
+    > ID1_20.npy
+    ...
+    > IDN_1.npy
+    ...
+    > IDN_20.npy
   - .../{project_name}-checkpoints --> where checkpoints will be saved
   - .../{project_name}-models --> where final models will be saved
   - .../{project_name}-embeddings --> where embeddings will be saved
