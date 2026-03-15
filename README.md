@@ -38,20 +38,20 @@ _REQUIRED MODULES:_
 * generate folders -> ```python LFT-former/folder_setting.py```
   - .../{project_name}-files --> where files are saved
   - .../{project_name}-imgs --> where imgs in npy or png are saved for IDs=1...N, in our example slices=20
-    > ID1_1.npy
-    ...
-    > ID1_20.npy
-    ...
-    > IDN_1.npy
-    ...
-    > IDN_20.npy
+    > ID1_1.npy <br>
+    ... <br>
+    > ID1_20.npy <br>
+    ... <br>
+    > IDN_1.npy <br>
+    ... <br>
+    > IDN_20.npy <br>
   - .../{project_name}-checkpoints --> where checkpoints will be saved
   - .../{project_name}-models --> where final models will be saved
   - .../{project_name}-embeddings --> where embeddings will be saved
   - .../{project_name}-results --> where your results will be saved
     > figures <br>
     > models <br>
-    > patients
+    > metrics
 
 <br> 
 
