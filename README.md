@@ -39,18 +39,18 @@ _REQUIRED MODULES:_
 
 __OVERALL HIERARCHY BEFORE RUNNING LFT:__
 
-  - .../{project_name}-files --> store here your source csv files (see A)
-  - .../{project_name}-imgs --> store here your imgs (see B)
-  - .../{project_name}-checkpoints --> where checkpoints will be saved
-  - .../{project_name}-models --> where final models will be saved
-  - .../{project_name}-embeddings --> where embeddings will be saved
-  - .../{project_name}-results --> where your results will be saved
+  - .../`project_name`-files --> store here your source csv files (see A)
+  - .../`project_name`-imgs --> store here your imgs (see B)
+  - .../`project_name`-checkpoints --> where checkpoints will be saved
+  - .../`project_name`-models --> where final models will be saved
+  - .../`project_name`-embeddings --> where embeddings will be saved
+  - .../`project_name`-results --> where your results will be saved
     > figures <br>
     > models <br>
     > metrics
 
 _IMAGE MANAGEMENT:_
-Store the 2D scans in npy or png for IDs=1...N, in our example slices=20. Make sure that whatever you store them e.g. {IDnum}{SLICEnum} is compatible with the file processing function, otherwise adapt it accordingly.
+Store the 2D scans in npy or png for IDs=1...N, in our example slices=20. Make sure that whatever you store them e.g. `IDnum``SLICEnum` is compatible with the file processing function, otherwise adapt it accordingly.
   > ID11.npy <br>
   ... <br>
   > ID120.npy <br>
@@ -74,7 +74,7 @@ In your original file, variables should be stored as: ["sid", "traj", "age", "ge
 
 ### ARGUMENTS:
   - required:
-    - path /your/path/
+    - path ```/your/path/```
 
   - togglable:
     - project_name (default:COPDGene)
