@@ -27,7 +27,7 @@ _REQUIRED MODULES:_
 
 `cd your_path`
 * git clone into `your_path` -> ```git clone https://github.com/acil-bwh/LFT-former.git```
-  - functions --> general code files
+  - Functions --> general code files
     > Compute-embeddings <br>
     > Utils <br>
       ...
@@ -102,49 +102,49 @@ WRAP can be: ("gatt" "gate" "modular" "along" "concat" "dot" "cross" "multi") --
 
 Running for RegionViT from scratch: 
 
-```python LFT-former/functions/init_training_RegionViT.py --path /your/path/ --cuda 1```
+```python LFT-former/Functions/init_training_RegionViT.py --path /your/path/ --cuda 1```
 
 Running for RegionViT from a pretrained model:
 
-```python LFT-former/functions/init_training_RegionViT.py --path /your/path/ --cuda 1 --pretrained```
+```python LFT-former/Functions/init_training_RegionViT.py --path /your/path/ --cuda 1 --pretrained```
 
 Running for RegionViT from a previous checkpoint:
 
-```python LFT-former/functions/init_training_RegionViT.py --path /your/path/ --cuda 1 --precheck```
+```python LFT-former/Functions/init_training_RegionViT.py --path /your/path/ --cuda 1 --precheck```
 
 ### RegionViT: Obtaining embeddings
 
-```python LFT-former/functions/init_embeddings_RegionViT.py --path "/home/qm031/" --cuda 1 --n_augmentations 10```
+```python LFT-former/Functions/init_embeddings_RegionViT.py --path "/home/qm031/" --cuda 1 --n_augmentations 10```
 
 ### LFT-former: Training
 
 Running for LFT-former from scratch: 
 
-```python LFT-former/functions/init_training_LFT.py /your/path/ --cuda 1 --add 0 --batch 64 --wrap gatt```
+```python LFT-former/Functions/init_training_LFT.py /your/path/ --cuda 1 --add 0 --batch 64 --wrap gatt```
 
 Running for LFT-former from a pretrained model:
 
-```python LFT-former/functions/init_training_LFT.py /your/path/ --cuda 1 --add 0 --batch 64 --wrap gatt --pretrained```
+```python LFT-former/Functions/init_training_LFT.py /your/path/ --cuda 1 --add 0 --batch 64 --wrap gatt --pretrained```
 
 Running for LFT-former from a previous checkpoint:
 
-```python LFT-former/functions/init_training_LFT.py /your/path/ --cuda 1 --add 0 --batch 64 --wrap gatt --precheck```
+```python LFT-former/Functions/init_training_LFT.py /your/path/ --cuda 1 --add 0 --batch 64 --wrap gatt --precheck```
   
 ### LFT-former: Inference
 
-```python LFT-former/functions/inference_LFT.py path /your/path/ --cuda 1 --add 0 --wrap gatt```
+```python LFT-former/Functions/inference_LFT.py path /your/path/ --cuda 1 --add 0 --wrap gatt```
 
 ### LFT-former: Confusion matrices and accuracy results
 
-```python LFT-former/functions/visualization_LFT.py path /your/path/ --add 0 --wrap gatt```
+```python LFT-former/Functions/visualization_LFT.py path /your/path/ --add 0 --wrap gatt```
 
 ### LFT-former: ROC curves
 
-```python LFT-former/functions/curves_LFT.py path /your/path/ --add 0 --wrap gatt```
+```python LFT-former/Functions/curves_LFT.py path /your/path/ --add 0 --wrap gatt```
 
 ### LFT-former: Predict for a single patient ID
 
-```python LFT-former/functions/inference_individual_LFT.py path /your/path/ --cuda 1 --add 0 --wrap gatt```
+```python LFT-former/Functions/inference_individual_LFT.py path /your/path/ --cuda 1 --add 0 --wrap gatt```
 
 
 
